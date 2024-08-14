@@ -1,0 +1,8 @@
+{
+    "Connection": {
+        "File": "database.db"
+    },
+    "Migration": {
+        "Path": "Assets/Migrations"
+    }
+}

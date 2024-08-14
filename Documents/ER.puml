@@ -1,0 +1,39 @@
+@startuml
+
+package Project {
+   entity T_Users {
+      + **id**: int <<PK>>
+      ---
+      * **name**: varchar(255) nullable
+      * **state_description**: varchar(255) nullable
+      * **last_logined_at**: datetime nullable
+      * **created_at**: datetime nullable
+   }
+
+   entity M_Config {
+      + **id**: int <<PK>>
+      ---
+      * **name**: varchar(255) <<UK>>
+      * **description**: varchar(255) nullable
+   }
+
+   entity M_ConfigValues {
+      + **id**: int <<PK>>
+      ---
+      + **config_id**: int <<FK>>
+      * **value**: varchar(255)
+      * **description**: varchar(255) nullable
+   }
+
+   entity T_UserConfigValues {
+      # **user_id**: int <<FK>>
+      # **config_value_id**: int <<FK>>
+   }
+}
+
+
+T_Users ||--o{ T_UserConfigValues
+T_UserConfigValues }o--|| M_ConfigValues
+M_Config ||--|{ M_ConfigValues
+
+@enduml

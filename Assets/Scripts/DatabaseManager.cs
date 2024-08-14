@@ -3,63 +3,47 @@ using SQLite4Unity3d;
 using System.IO;
 
 public class DatabaseManager : MonoBehaviour {
+    private const string ConfigDatabaseFile = "Database.Connection.File";
+    private const string ConfigMigrationPath = "Database.Migration.Path";
     private SQLiteConnection _connection;
 
-    void Start() {
 
-        string file = ConfigManager.Get<string>("Database.Connection.File");
+    private void Start() {
+        CreateConnection();
 
-        Debug.Log("config: " + file);
+        Migrate();
+
+    }
+
+    private void OnDestroy() {
+            _connection.Close();
+    }
+
+    private void OnApplicationQuit() {
+        _connection.Close();
+    }
 
 
+    private void CreateConnection() {
+        string file = ConfigManager.Get<string>(ConfigDatabaseFile);
+        Debug.Log($"Load database file: {file}");
 
-        string dbPath = Path.Combine(Application.persistentDataPath, "GameData.db");
+        string dbPath = Path.Combine(Application.persistentDataPath, file);
         _connection = new SQLiteConnection(dbPath, SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create);
+    }
 
-        // テーブルの作成
-        _connection.CreateTable<PlayerData>();
-        _connection.CreateTable<GameData>();
+    private void Migrate() {
+        string migrationPath = ConfigManager.Get<string>(ConfigMigrationPath);
+        Debug.Log($"Load migration path: {migrationPath}");
 
-        // サンプルデータの挿入
-        _connection.InsertAll(new[]{
-            new PlayerData { Id = 1, Name = "Player1" },
-            new PlayerData { Id = 2, Name = "Player2" }
-        });
+        if (Directory.Exists(migrationPath)) {
+            string[] migrationFiles = Directory.GetFiles(migrationPath, "*.sql");
 
-        _connection.InsertAll(new[]{
-            new GameData { PlayerId = 1, Score = 100 },
-            new GameData { PlayerId = 2, Score = 200 },
-            new GameData { PlayerId = 1, Score = 150 }
-        });
-
-        // データの結合とフィルタリング
-        var query = _connection.Query<JoinedData>(
-            "SELECT PlayerData.Name, GameData.Score " +
-            "FROM PlayerData " +
-            "INNER JOIN GameData ON PlayerData.Id = GameData.PlayerId " +
-            "WHERE GameData.Score > ?",
-            100);
-
-        foreach (var data in query) {
-            Debug.Log($"Name: {data.Name}, Score: {data.Score}");
+            foreach (var file in migrationFiles) {
+                Debug.Log($"Execute migration file: {file}");
+                string sql = File.ReadAllText(file);
+                _connection.Execute(sql);
+            }
         }
-    }
-
-    public class PlayerData {
-        [PrimaryKey, AutoIncrement]
-        public int Id { get; set; }
-        public string Name { get; set; }
-    }
-
-    public class GameData {
-        [PrimaryKey, AutoIncrement]
-        public int Id { get; set; }
-        public int PlayerId { get; set; }
-        public int Score { get; set; }
-    }
-
-    public class JoinedData {
-        public string Name { get; set; }
-        public int Score { get; set; }
     }
 }

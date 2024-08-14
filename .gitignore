@@ -52,3 +52,6 @@ UserSettings/
 # OS generated
 .DS_Store
 Thumbs.db
+
+# Package files
+Packages/

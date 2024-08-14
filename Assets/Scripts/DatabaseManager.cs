@@ -1,5 +1,5 @@
 using UnityEngine;
-using SQLite4Unity3d;
+using SQLite;
 using System.IO;
 
 public class DatabaseManager : MonoBehaviour {
@@ -7,22 +7,18 @@ public class DatabaseManager : MonoBehaviour {
     private const string ConfigMigrationPath = "Database.Migration.Path";
     private SQLiteConnection _connection;
 
-
     private void Start() {
         CreateConnection();
-
         Migrate();
-
     }
 
     private void OnDestroy() {
-            _connection.Close();
+        _connection?.Close();
     }
 
     private void OnApplicationQuit() {
-        _connection.Close();
+        _connection?.Close();
     }
-
 
     private void CreateConnection() {
         string file = ConfigManager.Get<string>(ConfigDatabaseFile);
@@ -45,5 +41,9 @@ public class DatabaseManager : MonoBehaviour {
                 _connection.Execute(sql);
             }
         }
+    }
+
+    public SQLiteConnection GetConnection() {
+        return _connection;
     }
 }

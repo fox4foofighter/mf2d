@@ -40,14 +40,6 @@ public class DatabaseManager : MonoBehaviour {
             Array.Sort(migrationFiles);
 
             foreach (var file in migrationFiles) {
-                string sql = File.ReadAllText(file);
-
-                // Skip the file if it is empty
-                if (string.IsNullOrWhiteSpace(sql)) {
-                    Debug.LogWarning($"Skipped empty migration file: {file}");
-                    continue;
-                }
-
                 string migrationName = Path.GetFileNameWithoutExtension(file);
 
                 // if migrationName is already executed, skip it
@@ -59,12 +51,38 @@ public class DatabaseManager : MonoBehaviour {
 
                 // Execute the migration
                 Debug.Log($"Execute migration: {migrationName}");
-                _connection.Execute(sql);
+                ExecuteFile(file);
 
                 // Record the migration
+                Debug.Log($"Record migration: {migrationName}");
                 string recordMigrationQuery = $"INSERT INTO migrations (name) VALUES ('{migrationName}')";
                 _connection.Execute(recordMigrationQuery);
             }
+        }
+    }
+
+    private void ExecuteFile(string file) {
+        string[] sqls = File.ReadAllText(file).Split(';');
+        Debug.Log($"Load sql file: {file}");
+
+        string sql;
+        for (int i = 0; i < sqls.Length; i++) {
+            sql = sqls[i].Trim();
+            Debug.Log($"Load sql: {sql}");
+
+            // Skip the sql if it is empty
+            if (string.IsNullOrWhiteSpace(sql)) {
+                continue;
+            }
+
+            // Reject comment
+            if (sql.StartsWith("--")) {
+                continue;
+            }
+
+            // Execute the sql
+            Debug.Log($"Execute sql: {sql}");
+            _connection.Execute(sql);
         }
     }
 

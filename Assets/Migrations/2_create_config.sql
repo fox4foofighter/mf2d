@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS config;
+
 CREATE TABLE config (
     id INT PRIMARY KEY,
     name VARCHAR(255) UNIQUE NOT NULL,
